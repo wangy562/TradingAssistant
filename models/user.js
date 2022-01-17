@@ -7,7 +7,7 @@ const userSchema = new Schema({
         type: String,
         required: true
     },
-    subscriptions: [String]
+    tickers: [String]
 })
 
 export const UserModel = mongoose.model("UserModel", userSchema)
