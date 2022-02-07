@@ -14,9 +14,16 @@ router.get("/:id", (req, res) => {
     })
 })
 
-router.delete("/delete_email/:email", (req, res) => {
+router.get("/get_email", async (req, res) => {
+    const { email } = req.body
+    const user = await UserModel.findOne({ email: email }).exec()
+    res.status(200).json(user)
+    //TODO find out why findOne is returning null
+})
+
+router.delete("/delete_email/:email", async (req, res) => {
     const { email } = req.params
-    UserModel.findOneAndDelete({ email: email }, (err, user) => {
+    await UserModel.findOneAndDelete({ email: email }, (err, user) => {
         if (err) {
             res.status(404).send(err)
         } else {
@@ -25,18 +32,21 @@ router.delete("/delete_email/:email", (req, res) => {
     })
 })
 
-router.post("/add_email/:email/", (req, res) => {
-    const { email } = req.params
-    const { tickers } = req.body
-    const user = new UserModel({email: email, tickers: tickers})
-    await user.save()
-    //TODO validate user has been added
-    res.status(200).json(user)
+router.post("/add_email", async (req, res) => {
+    const { email, tickers } = req.body
+    const existingUser = await UserModel.findOne({ email: email }).exec()
+    if (existingUser == null) {
+        const userNew = new UserModel({ email: email, tickers: tickers })
+        await userNew.save()
+        res.status(200).json(userNew)
+    } else {
+        res.sendStatus(502)
+    }
 })
 
-router.get("/:id/following", (req, res) => {
+router.get("/:id/following", async (req, res) => {
     const { userId } = req.params
-    const user = UserModel.findById(userId, (err, user) => {
+    await UserModel.findById(userId, (err, user) => {
         if (err) {
             res.status(404).send(err)
         } else {
@@ -45,14 +55,14 @@ router.get("/:id/following", (req, res) => {
     })
 })
 
-router.put("/:id/update_following", (req, res) => {
+router.put("/:id/update_following", async (req, res) => {
     const { userId } = req.params
     const { tickers } = req.body
-    const user = UserModel.findByIdAndUpdate(userId, (err, user) => {
+    await UserModel.findByIdAndUpdate(userId, (err, user) => {
         if (err) {
             res.status(404).send(err)
         } else {
-            res.status(200)
+            res.status(200).json(user)
         }
-    } )
+    })
 })
